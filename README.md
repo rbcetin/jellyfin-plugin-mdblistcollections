@@ -22,7 +22,7 @@ uses about two API calls per list per run.
 2. Dashboard → Plugins → MDBList Collections: enter the API key, then add lists. A list can be an
    mdblist.com list URL (`https://mdblist.com/lists/snoak/imdb-top-250-movies`), `user/slug`, or a
    numeric list id.
-3. The task **Sync MDBList collections** runs at startup and daily. Run it from Dashboard →
+3. Saving the settings syncs right away. The task **Sync MDBList collections** also runs at startup and daily; run it from Dashboard →
    Scheduled Tasks to apply changes now.
 
 ## Build
