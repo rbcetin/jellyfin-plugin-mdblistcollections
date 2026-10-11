@@ -16,13 +16,25 @@ scheduled task creates the collection and keeps its contents matching the list.
 Requires Jellyfin 12 and a free MDBList API key (mdblist.com → Preferences → API Access). The task
 uses about two API calls per list per run.
 
+## Install
+
+Dashboard → Plugins → Repositories → add:
+
+```
+https://raw.githubusercontent.com/rbcetin/jellyfin-plugin-mdblistcollections/main/manifest.json
+```
+
+Then install MDBList Collections from the catalogue and restart.
+
+Or do it by hand: unzip the [release](https://github.com/rbcetin/jellyfin-plugin-mdblistcollections/releases)
+into `<config>/plugins/MDBList Collections_<version>/` and restart.
+
 ## Setup
 
-1. Install the plugin and restart Jellyfin.
-2. Dashboard → Plugins → MDBList Collections: enter the API key, then add lists. A list can be an
+1. Dashboard → Plugins → MDBList Collections: enter the API key, then add lists. A list can be an
    mdblist.com list URL (`https://mdblist.com/lists/snoak/imdb-top-250-movies`), `user/slug`, or a
    numeric list id.
-3. Saving the settings syncs right away. The task **Sync MDBList collections** also runs at startup and daily; run it from Dashboard →
+2. Saving the settings syncs right away. The task **Sync MDBList collections** also runs at startup and daily; run it from Dashboard →
    Scheduled Tasks to apply changes now.
 
 ## Build
