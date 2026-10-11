@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MDBList Collections</title>
+</head>
+<body>
+    <div id="MdbListCollectionsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="MdbListCollectionsConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">MDBList Collections</h2>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="mdbApiKey" label="MDBList API key" />
+                        <div class="fieldDescription">From mdblist.com &rarr; Preferences &rarr; API Access.</div>
+                    </div>
+
+                    <h3>Lists</h3>
+                    <div class="fieldDescription">
+                        One list per row: an mdblist.com list URL, <code>user/slug</code> or a list id.
+                        A collection name set here is applied on every sync; leave it empty to start with the list's own name
+                        and keep any rename you make in Jellyfin.
+                        The collection mirrors the list &mdash; items added to it by hand are removed on the next sync.
+                        Collections without a poster get a collage of the list's top items; an image you set yourself is kept.
+                    </div>
+                    <div id="mdbLists"></div>
+                    <button is="emby-button" type="button" id="mdbAddList" class="raised button-alt">
+                        <span>Add list</span>
+                    </button>
+
+                    <div style="margin-top: 2em;">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                    <div class="fieldDescription">
+                        Sync runs daily as the scheduled task "Sync MDBList collections". Run it from Dashboard &rarr; Scheduled Tasks to apply changes now.
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function () {
+                var pluginId = '654eb41b-7c10-4e71-8ca2-70ecfb29e0ed';
+                var page = document.querySelector('#MdbListCollectionsConfigPage');
+                var listsEl = page.querySelector('#mdbLists');
+
+                function addRow(list, name) {
+                    var row = document.createElement('div');
+                    row.className = 'mdbRow';
+                    row.style.cssText = 'display:flex; gap:1em; align-items:flex-end; margin-bottom:1em;';
+                    row.innerHTML =
+                        '<div class="inputContainer" style="flex:2; margin:0;"><input is="emby-input" type="text" class="mdbList" label="List" /></div>' +
+                        '<div class="inputContainer" style="flex:1; margin:0;"><input is="emby-input" type="text" class="mdbName" label="Collection name (optional)" /></div>' +
+                        '<button is="paper-icon-button-light" type="button" class="mdbRemove" title="Remove"><span class="material-icons delete" aria-hidden="true"></span></button>';
+                    row.querySelector('.mdbList').value = list || '';
+                    row.querySelector('.mdbName').value = name || '';
+                    row.querySelector('.mdbRemove').addEventListener('click', function () { row.remove(); });
+                    listsEl.appendChild(row);
+                }
+
+                page.addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        page.querySelector('#mdbApiKey').value = config.MdbListApiKey || '';
+                        listsEl.innerHTML = '';
+                        (config.Lists || []).forEach(function (l) { addRow(l.List, l.CollectionName); });
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+                page.querySelector('#mdbAddList').addEventListener('click', function () { addRow('', ''); });
+
+                page.querySelector('#MdbListCollectionsConfigForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.MdbListApiKey = page.querySelector('#mdbApiKey').value.trim();
+                        config.Lists = [];
+                        listsEl.querySelectorAll('.mdbRow').forEach(function (row) {
+                            var list = row.querySelector('.mdbList').value.trim();
+                            if (list) {
+                                config.Lists.push({ List: list, CollectionName: row.querySelector('.mdbName').value.trim() });
+                            }
+                        });
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                    });
+                    return false;
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>
