@@ -1,9 +1,11 @@
 using System.Globalization;
 using Jellyfin.Plugin.MdbListCollections.Configuration;
+using Jellyfin.Plugin.MdbListCollections.ScheduledTasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.Tasks;
 
 namespace Jellyfin.Plugin.MdbListCollections;
 
@@ -12,12 +14,16 @@ namespace Jellyfin.Plugin.MdbListCollections;
 /// </summary>
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
+    private readonly ITaskManager _taskManager;
+
     /// <summary>Initializes a new instance of the <see cref="Plugin"/> class.</summary>
     /// <param name="applicationPaths">Application paths.</param>
     /// <param name="xmlSerializer">XML serializer.</param>
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
+    /// <param name="taskManager">Task manager.</param>
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ITaskManager taskManager)
         : base(applicationPaths, xmlSerializer)
     {
+        _taskManager = taskManager;
         Instance = this;
     }
 
@@ -32,6 +38,14 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     /// <inheritdoc />
     public override string Description => "Keeps Jellyfin collections in sync with MDBList lists.";
+
+    /// <inheritdoc />
+    /// <remarks>Saving the config page syncs right away, so a new list or name shows up without waiting a day.</remarks>
+    public override void UpdateConfiguration(BasePluginConfiguration configuration)
+    {
+        base.UpdateConfiguration(configuration);
+        _taskManager.QueueScheduledTask<SyncCollectionsTask>();
+    }
 
     /// <inheritdoc />
     public IEnumerable<PluginPageInfo> GetPages()
